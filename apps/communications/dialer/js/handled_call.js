@@ -45,6 +45,13 @@ function HandledCall(aCall, aNode) {
 }
 
 HandledCall.prototype.handleEvent = function hc_handle(evt) {
+  var group = navigator.mozTelephony.conferenceGroup;
+  var calls = group.calls;
+  dump("XXX handledCall: mpty sate: " + group.state);
+  dump("XXX handledCall: mptyCalls: " + JSON.stringify(calls));
+  calls.forEach(function ttt(call) {
+    dump("XXX handledCall: mpty.calls: " + call.number + " " + call.state);
+  });
   switch (evt.call.state) {
     case 'connected':
       CallScreen.render('connected');
