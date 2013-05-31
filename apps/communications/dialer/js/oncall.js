@@ -165,6 +165,31 @@ var OnCallHandler = (function onCallHandler() {
   var handledCalls = [];
   var telephony = window.navigator.mozTelephony;
   telephony.oncallschanged = onCallsChanged;
+  var mpty = telephony.conferenceGroup;
+  mpty.onstatechange = function onstatechange(evt) {
+    try {
+      dump("XXX oncall mpty.onstatechange: " + mpty.state);
+    } catch (e) {
+      dump("XXX oncall mpty.onstatechange error: " + e);
+    }
+    var calls = mpty.calls;
+    calls.forEach(function ttt(call) {
+      dump("XXX onCall: mpty.calls: " + call.number + " " + call.state);
+      var telCalls = telephony.calls;
+      telCalls.forEach(function yyy(tcall) {
+        dump("XXX check telephony.calls: " + tcall.number + " call.group: " + tcall.group + " call.group.calls.length: " + tcall.group.calls.length);
+      });
+    });
+
+    if (mpty.state === 'connected') {
+      dump("XXX oncall mpty.hold");
+      mpty.hold();
+    }
+  }
+
+  mpty.oncallschanged = function oncallschanged(evt) {
+    dump("XXX oncall mpty.oncallschanged: " + evt.call.group);
+  }
 
   var settings = window.navigator.mozSettings;
 
@@ -238,6 +263,7 @@ var OnCallHandler = (function onCallHandler() {
 
   /* === Handled calls === */
   var highPriorityWakeLock = null;
+  var mpty = telephony.conferenceGroup;
   function onCallsChanged() {
     // Acquire or release the high-priority wake lock, as necessary.  This
     // (mostly) prevents this process from being killed while we're on a call.
@@ -277,6 +303,7 @@ var OnCallHandler = (function onCallHandler() {
     } else {
       CallScreen.calls.dataset.count = handledCalls.length;
     }
+  
   }
 
   function addCall(call) {

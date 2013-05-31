@@ -7,6 +7,12 @@ function HandledCall(aCall, aNode) {
   this.call = aCall;
 
   aCall.addEventListener('statechange', this);
+  aCall.addEventListener('groupchange', function ongroupchange(evt){
+    dump("XXX aCall " + aCall.number + " ongroupchange: " + aCall.group);
+    if (aCall.group) {
+      dump("XXX aCall.group.calls: " + JSON.stringify(aCall.group.calls));
+    }
+  });
 
   this.recentsEntry = {
     date: Date.now(),
@@ -45,13 +51,13 @@ function HandledCall(aCall, aNode) {
 }
 
 HandledCall.prototype.handleEvent = function hc_handle(evt) {
-  var group = navigator.mozTelephony.conferenceGroup;
-  var calls = group.calls;
-  dump("XXX handledCall: mpty sate: " + group.state);
+  var calls = navigator.mozTelephony.conferenceGroup.calls;
   dump("XXX handledCall: mptyCalls: " + JSON.stringify(calls));
   calls.forEach(function ttt(call) {
     dump("XXX handledCall: mpty.calls: " + call.number + " " + call.state);
   });
+  var state = navigator.mozTelephony.conferenceGroup.state;
+  dump("XXX handledCall: mpty sate: " + state);
   switch (evt.call.state) {
     case 'connected':
       CallScreen.render('connected');
@@ -75,6 +81,26 @@ HandledCall.prototype.handleEvent = function hc_handle(evt) {
     case 'busy':
       this.busy();
       break;
+  }
+  // Test conferenceGroup.add
+  var telephony = navigator.mozTelephony;
+  if (telephony.calls.length == 2) {
+    dump("XXX oncall -- going to conferenceGroup.add");
+    var activeCount = 0;
+    var heldCount = 0;
+    telephony.calls.forEach(function test(call) {
+      dump("XXX call.state: " + call.state);
+      if (call.state == "connected") {
+        activeCount++;
+      }
+      if (call.state == "held") {
+        heldCount++;
+      }
+     });
+    if (activeCount == 1 && heldCount == 1) {
+      dump("XXX oncall - conferenceGroup.add");
+      telephony.conferenceGroup.add(telephony.calls[0], telephony.calls[1]);
+    }
   }
 };
 
